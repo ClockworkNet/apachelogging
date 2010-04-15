@@ -1,0 +1,164 @@
+#!/usr/bin/python
+# 
+# Ben Beuchler
+# <insyte@clockwork.net>
+# 04/15/2010
+
+"""\
+USAGE: error2syslog [-vh]
+
+Watch FIFODIR for FIFOs with logging data waiting to be read.
+Read the data and inject it into syslog.
+
+"""
+
+# Python native modules
+import os
+import sys
+import stat
+import time
+import select
+import optparse
+import logging, logging.handlers
+
+# Third-party modules
+import pyinotify
+
+FIFODIR = "/home/insyte/fifos/"
+
+log = logging.getLogger('errlog2syslog')
+
+screenhdlr = logging.StreamHandler()
+screenfmt  = logging.Formatter('%(levelname)s %(message)s')
+screenhdlr.setFormatter(screenfmt)
+
+apacheErr = logging.getLogger('apache_error_log')
+
+apacheErrHdlr = logging.handlers.SysLogHandler('/dev/log', 'local2')
+apacheErrFmt = logging.Formatter('%(message)s')
+apacheErrHdlr.setFormatter(apacheErrFmt)
+apacheErr.addHandler(apacheErrHdlr)
+
+apacheDebugHdlr = logging.StreamHandler()
+apacheDebugFmt = logging.Formatter('%(message)s')
+apacheDebugHdlr.setFormatter(apacheDebugFmt)
+
+apacheErr.setLevel(logging.DEBUG)
+
+if sys.stdout.isatty():
+    log.addHandler(screenhdlr)
+    apacheErr.addHandler(apacheDebugHdlr)
+
+filesByName = {}
+filesByFd   = {}
+
+class InotifyEventHandler(pyinotify.ProcessEvent):
+    def __init__(self, poller):
+        self._poller = poller
+    def process_IN_DELETE(self, event):
+        log.debug("Deleted: %s" % event.name)
+        fd = filesByName[event.name][0].fileno()
+        removeFifo(self._poller, fd)
+    def process_IN_CREATE(self, event):
+        if isFifo(os.path.join(event.path, event.name)):
+            log.debug("Added: %s" % event.name)
+            addFifo(self._poller, os.path.join(FIFODIR, event.name))
+
+def isFifo(path):
+    """Check to see if the supplied path is a FIFO."""
+    mode = os.stat(path)[stat.ST_MODE]
+    return stat.S_ISFIFO(mode)
+
+def startInotify(poller):
+    """Launch inotify thread.
+
+    Watch the FIFO directory and register/unregister FIFOs that are added or
+    removed.  Set the "daemon" flag on the inotify thread so the thread will
+    automatically terminate when the program exits.
+    """
+    handler = InotifyEventHandler(poller=poller)
+    wm = pyinotify.WatchManager()
+    inotifyMask = pyinotify.EventsCodes.IN_DELETE | \
+                  pyinotify.EventsCodes.IN_CREATE
+    notifier = pyinotify.ThreadedNotifier(wm, handler)
+    notifier.setDaemon(True)
+    notifier.start()
+    watches = wm.add_watch(FIFODIR, inotifyMask)
+
+def syslogInject(fd):
+    """Read the data available on fd and inject into syslog.
+    """
+    name = filesByFd[fd][1]
+    log.debug("Reading from %s fd(%d)" % (name, fd))
+    apacheErr.info("%s[666]: %s" % (filesByFd[fd][1], filesByFd[fd][0].read().strip()))
+
+def pollFifos(p):
+    """Monitor the FIFOs in FIFODIR and process any data written to them.
+
+    On startup, grab a list of all the existing FIFOs and register them with
+    the poll() instance.  After that, new additions / removals will be
+    registered by inotify.
+    """
+    # Register the already existing FIFOs
+    for f in os.listdir(FIFODIR):
+        fullpath = os.path.join(FIFODIR, f)
+        if isFifo(fullpath):
+            addFifo(p, fullpath)
+    while True:
+        r = p.poll(10)
+        for fdstat in r:
+            log.debug("Processing: %s" % (fdstat,))
+            if fdstat[1] & select.POLLIN:
+                log.debug("POLLIN: %d" % fdstat[1])
+                syslogInject(fdstat[0])
+            if fdstat[1] & select.POLLHUP:
+                log.debug("POLLHUP: %d" % fdstat[1])
+                fullpath = os.path.join(FIFODIR, filesByFd[fdstat[0]][1])
+                removeFifo(p, fdstat[0])
+                addFifo(p, fullpath)
+            if fdstat[1] & select.POLLERR:
+                log.debug("POLLERR: %d" % fdstat[1])
+            if fdstat[1] & select.POLLNVAL:
+                log.debug("POLLNVAL: %d" % fdstat[1])
+
+def addFifo(poller, fullpath):
+    """Add FIFO to the poller object and save the info."""
+    fifo = os.fdopen(os.open(fullpath, os.O_NONBLOCK))
+    fd = fifo.fileno()
+    fn = os.path.basename(fullpath)
+    filesByName[fn] = (fifo, fn)
+    filesByFd[fd] = (fifo, fn)
+    log.debug("Adding FIFO: %s[%d]" % (fullpath, fd))
+    poller.register(fd, select.POLLIN)
+
+def removeFifo(poller, fd):
+    fn = filesByFd[fd][1]
+    poller.unregister(fd)
+    del(filesByName[fn])
+    del(filesByFd[fd])
+
+
+def parserSetup():
+    """Setup the OptionParser instance."""
+    p = optparse.OptionParser(__doc__)
+    p.add_option("--verbose", "-v", action="store_true",
+                 help="Print copious debugging info. "
+                      "Only used when run from a terminal.")
+    p.add_option("--fifodir", "-d", action="store", default=FIFODIR,
+                 help="Directory to scan for Apache's loggin FIFOs. "
+                      "Defaults to: %s" % FIFODIR)
+    return p
+
+def main(argv):
+    global FIFODIR
+    p = parserSetup()
+    opts, args = p.parse_args(argv)
+    FIFODIR = opts.fifodir
+    if opts.verbose:
+        log.setLevel(logging.DEBUG)
+    poller = select.poll()
+    startInotify(poller)
+    pollFifos(poller)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
