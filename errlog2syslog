@@ -24,7 +24,7 @@ import logging, logging.handlers
 # Third-party modules
 import pyinotify
 
-FIFODIR = "/home/insyte/fifos/"
+FIFODIR = "/var/run/apache2/error_logs"
 
 log = logging.getLogger('errlog2syslog')
 
@@ -53,8 +53,9 @@ filesByName = {}
 filesByFd   = {}
 
 class InotifyEventHandler(pyinotify.ProcessEvent):
-    def __init__(self, poller):
+    def __init__(self, poller, watchManager):
         self._poller = poller
+        self._manager = watchManager
     def process_IN_DELETE(self, event):
         log.debug("Deleted: %s" % event.name)
         fd = filesByName[event.name][0].fileno()
@@ -63,11 +64,27 @@ class InotifyEventHandler(pyinotify.ProcessEvent):
         if isFifo(os.path.join(event.path, event.name)):
             log.debug("Added: %s" % event.name)
             addFifo(self._poller, os.path.join(FIFODIR, event.name))
+    def process_IN_IGNORED(self, event):
+        log.debug("Watch removed: %s[%d]" % (event.path, event.wd))
+        self._manager.rm_watch(event.wd)
+        watchFifoDir(self._manager)
 
 def isFifo(path):
     """Check to see if the supplied path is a FIFO."""
     mode = os.stat(path)[stat.ST_MODE]
     return stat.S_ISFIFO(mode)
+
+def watchFifoDir(wm):
+    """Loop over attempting to add the watched directory until it succeeds.
+    """
+    inotifyMask = pyinotify.EventsCodes.IN_DELETE | \
+                  pyinotify.EventsCodes.IN_CREATE
+    while True:
+        watches = wm.add_watch(FIFODIR, inotifyMask)
+        if watches[FIFODIR] < 0:
+            time.sleep(1)
+        else:
+            break
 
 def startInotify(poller):
     """Launch inotify thread.
@@ -76,14 +93,12 @@ def startInotify(poller):
     removed.  Set the "daemon" flag on the inotify thread so the thread will
     automatically terminate when the program exits.
     """
-    handler = InotifyEventHandler(poller=poller)
     wm = pyinotify.WatchManager()
-    inotifyMask = pyinotify.EventsCodes.IN_DELETE | \
-                  pyinotify.EventsCodes.IN_CREATE
+    handler = InotifyEventHandler(poller=poller, watchManager=wm)
     notifier = pyinotify.ThreadedNotifier(wm, handler)
     notifier.setDaemon(True)
     notifier.start()
-    watches = wm.add_watch(FIFODIR, inotifyMask)
+    watchFifoDir(wm)
 
 def syslogInject(fd):
     """Read the data available on fd and inject into syslog.
@@ -105,7 +120,7 @@ def pollFifos(p):
         if isFifo(fullpath):
             addFifo(p, fullpath)
     while True:
-        r = p.poll(10)
+        r = p.poll(5000)
         for fdstat in r:
             log.debug("Processing: %s" % (fdstat,))
             if fdstat[1] & select.POLLIN:
