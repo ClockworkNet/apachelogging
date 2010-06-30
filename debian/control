@@ -1,0 +1,22 @@
+Source: apachelogging
+Section: web
+Priority: optional
+Maintainer: Ben Beuchler <insyte@clockwork.net>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: apachelogging
+Architecture: all
+Depends: apache2.2-common, syslog-ng, ${misc:Depends}
+Description: Custom Clockwork logging for Apache.
+ This package is required for Clockwork's Apache -> syslog logging system.
+ .
+ apache2ctl
+   A wrapper around Apache's apache2ctl script to create the necessary
+   pipes before launching Apache.  The package installs a diversion so
+   subsequent installs / upgrades of Apache do not overwrite this wrapper.
+ .
+ errorlog2syslog
+   Watches the pipes created by the apache2ctl wrapper and injects messages
+   read from the pipes into syslog, with the appropriate headers set so
+   syslog-ng can place the log entries in the correct per-site log files.

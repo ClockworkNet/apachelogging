@@ -1,0 +1,2 @@
+apache2ctl /usr/sbin
+errorlog2syslog /usr/sbin

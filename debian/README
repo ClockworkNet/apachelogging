@@ -1,0 +1,16 @@
+apachelogging
+----------------------------
+
+This package is required for Clockwork's Apache -> syslog logging system.
+
+apache2ctl
+  A wrapper around Apache's apache2ctl script to create the necessary
+  pipes before launching Apache.  The package installs a diversion so
+  subsequent installs / upgrades of Apache do not overwrite this wrapper.
+
+errorlog2syslog
+  Watches the pipes created by the apache2ctl wrapper and injects messages
+  read from the pipes into syslog, with the appropriate headers set so
+  syslog-ng can place the log entries in the correct per-site log files.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Wed, 30 Jun 2010 15:25:16 -0500
