@@ -152,7 +152,6 @@ def removeFifo(poller, fd):
     del(filesByName[fn])
     del(filesByFd[fd])
 
-
 def parserSetup():
     """Setup the OptionParser instance."""
     p = optparse.OptionParser(__doc__)
