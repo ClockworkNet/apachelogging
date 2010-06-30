@@ -1,3 +1,9 @@
+apachelogging (1.1) hardy; urgency=low
+
+  * Cleaned up spacing in errorlog2syslog.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Wed, 30 Jun 2010 18:02:27 -0500
+
 apachelogging (1.0) unstable; urgency=low
 
   * Initial release
