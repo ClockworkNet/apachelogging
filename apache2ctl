@@ -1,0 +1,57 @@
+#!/bin/bash
+# 
+# Wrap calls to apache2ctl.  If necessary, build the error_log pipes
+# needed by error2syslog.
+# 
+# Replace the system apache2ctl by creating a diversion, like so:
+#
+# dpkg-divert --add --rename --divert /usr/sbin/apache2ctl.distrib /usr/sbin/apache2ctl
+#
+# Then install this script as /usr/sbin/apache2ctl.
+
+A2C="/usr/sbin/apache2ctl.distrib"
+
+ARGV="$@"
+
+HTTPDCONF="/www/etc/apache2/httpd.conf"
+LOGPIPEDIR="/var/spool/apache2/"
+USER="www-data"
+GROUP="www-data"
+
+createAccessLogPipe() {
+    if ! [[ -p ${LOGPIPEDIR}/access_log ]]
+    then
+        mkfifo -m 0660 ${LOGPIPEDIR}/access_log
+        chown www-data:www-data ${LOGPIPEDIR}/access_log
+    fi
+}
+ 
+createErrorLogPipes() {
+    rm -rf ${LOGPIPEDIR}/error_logs
+    mkdir -m 0770  ${LOGPIPEDIR}/error_logs
+    chown www-data:www-data $LOGPIPEDIR
+    chmod 0770 $LOGPIPEDIR
+    for servername in $( 
+        for config in $(awk '/^Include/ { print $2 }' $HTTPDCONF)
+            do
+                awk '/^[^#]*ServerName/ { print $2 }' $config
+            done | sort -u
+    )
+    do
+        mkfifo -m 0640 ${LOGPIPEDIR}/error_logs/$servername
+        chown www-data:www-data ${LOGPIPEDIR}/error_logs/$servername
+    done
+}
+
+case $ARGV in
+    start|restart|graceful)
+		if ! [[ -d $LOGPIPEDIR ]]
+		then
+			mkdir -m 0700 $LOGPIPEDIR
+		fi
+        createAccessLogPipe
+        createErrorLogPipes
+        ;;
+esac
+
+$A2C $ARGV
