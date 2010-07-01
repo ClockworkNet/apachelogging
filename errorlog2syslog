@@ -24,7 +24,7 @@ import logging, logging.handlers
 # Third-party modules
 import pyinotify
 
-FIFODIR = "/var/run/apache2/error_logs"
+FIFODIR = "/var/spool/apache2/error_logs"
 
 log = logging.getLogger('errlog2syslog')
 
