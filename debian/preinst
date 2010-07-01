@@ -17,7 +17,7 @@ set -e
 case "$1" in
     install|upgrade)
 		dpkg-divert --add --rename \
-			--package apachelogging \
+			--package cw-apachelogging \
 			--divert /usr/sbin/apache2ctl.distrib \
 			/usr/sbin/apache2ctl
     ;;

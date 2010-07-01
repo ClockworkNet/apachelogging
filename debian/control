@@ -1,13 +1,13 @@
-Source: apachelogging
+Source: cw-apachelogging
 Section: web
 Priority: optional
 Maintainer: Ben Beuchler <insyte@clockwork.net>
 Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.2
 
-Package: apachelogging
+Package: cw-apachelogging
 Architecture: all
-Depends: apache2.2-common, syslog-ng, ${misc:Depends}
+Depends: python-pyinotify, apache2.2-common, syslog-ng
 Description: Custom Clockwork logging for Apache.
  This package is required for Clockwork's Apache -> syslog logging system.
  .

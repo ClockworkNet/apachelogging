@@ -1,4 +1,4 @@
-apachelogging
+cw-apachelogging
 ----------------------------
 
 This package is required for Clockwork's Apache -> syslog logging system.

@@ -26,7 +26,7 @@ case "$1" in
     purge|remove|abort-install|disappear)
 		# Remove the diversion for the apache2ctl wrapper.
 		dpkg-divert --remove --rename \
-			--package apachelogging \
+			--package cw-apachelogging \
 			--divert /usr/sbin/apache2ctl.distrib \
 			/usr/sbin/apache2ctl
 		# Clean up the directories created for the log pipes.
