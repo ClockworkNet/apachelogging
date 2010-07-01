@@ -1,0 +1,12 @@
+# errorlog2syslog
+#
+# Watches a filesystem full of pipes, reads data from them, and injects
+# said data into syslog.
+
+description "Daemon to log Apache errors via syslog"
+author      "Ben Beuchler <insyte@clockwork.net>"
+
+start on startup
+
+exec /usr/sbin/errorlog2syslog
+respawn
