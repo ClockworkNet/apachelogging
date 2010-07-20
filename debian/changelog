@@ -1,3 +1,39 @@
+cw-apachelogging (1.10) hardy; urgency=low
+
+  * Add log2mail.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Tue, 20 Jul 2010 13:54:03 -0500
+
+cw-apachelogging (1.9) hardy; urgency=low
+
+  * WTF.  I can't get these postrm files right...
+
+ -- Ben Beuchler <insyte@clockwork.net>  Thu, 01 Jul 2010 00:09:00 -0500
+
+cw-apachelogging (1.8) hardy; urgency=low
+
+  * Minor tweak to postrm to facilitate full cleanup.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Thu, 01 Jul 2010 00:05:39 -0500
+
+cw-apachelogging (1.7) hardy; urgency=low
+
+  * Fix various pre/post scripts.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Thu, 01 Jul 2010 00:02:56 -0500
+
+cw-apachelogging (1.6) hardy; urgency=low
+
+  * Added start/stop commands to pre/post scripts.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Wed, 30 Jun 2010 23:54:21 -0500
+
+cw-apachelogging (1.5) hardy; urgency=low
+
+  * Added Upstart script for errorlog2syslog.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Wed, 30 Jun 2010 23:48:07 -0500
+
 cw-apachelogging (1.4) hardy; urgency=low
 
   * Update path for error_logs in errorlog2syslog.

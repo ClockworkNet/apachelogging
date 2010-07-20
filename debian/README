@@ -13,4 +13,8 @@ errorlog2syslog
   read from the pipes into syslog, with the appropriate headers set so
   syslog-ng can place the log entries in the correct per-site log files.
 
- -- Ben Beuchler <insyte@clockwork.net>  Wed, 30 Jun 2010 15:25:16 -0500
+log2mail
+  Collect log lines sent to it by syslog-ng.  Email those log lines to the
+  configured address at a specified interval.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Wed, 20 Jul 2010 13:59:00 -0500
