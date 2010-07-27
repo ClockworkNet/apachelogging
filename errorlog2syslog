@@ -53,21 +53,27 @@ filesByName = {}
 filesByFd   = {}
 
 class InotifyEventHandler(pyinotify.ProcessEvent):
-    def __init__(self, poller, watchManager):
+    def __init__(self, poller):
         self._poller = poller
-        self._manager = watchManager
+
     def process_IN_DELETE(self, event):
-        log.debug("Deleted: %s" % event.name)
-        fd = filesByName[event.name][0].fileno()
-        removeFifo(self._poller, fd)
+        if event.path == FIFODIR:
+            log.debug("Deleted (inotify): %s" % event.name)
+            try:
+                fd = filesByName[event.name][0].fileno()
+                removeFifo(self._poller, fd)
+            except KeyError:
+                pass
+
     def process_IN_CREATE(self, event):
-        if isFifo(os.path.join(event.path, event.name)):
-            log.debug("Added: %s" % event.name)
-            addFifo(self._poller, os.path.join(FIFODIR, event.name))
-    def process_IN_IGNORED(self, event):
-        log.debug("Watch removed: %s[%d]" % (event.path, event.wd))
-        self._manager.rm_watch(event.wd)
-        watchFifoDir(self._manager)
+        if event.path == FIFODIR:
+            if isFifo(os.path.join(event.path, event.name)):
+                log.debug("Added (inotify): %s" % event.name)
+                addFifo(self._poller, os.path.join(FIFODIR, event.name))
+
+    def process_default(self, event):
+        log.debug("Unknown event: %s on %s[%d]" % (event.event_name,
+                                                   event.path, event.wd))
 
 def isFifo(path):
     """Check to see if the supplied path is a FIFO."""
@@ -75,15 +81,21 @@ def isFifo(path):
     return stat.S_ISFIFO(mode)
 
 def watchFifoDir(wm):
-    """Loop over attempting to add the watched directory until it succeeds.
+    """Try adding the watched directory until it succeeds.
+
+    Attempt to create a watch on the requested directory.  If it fails, sleep
+    for 1 second and retry.
     """
     inotifyMask = pyinotify.EventsCodes.IN_DELETE | \
                   pyinotify.EventsCodes.IN_CREATE
+    watchDir = os.path.dirname(FIFODIR)
     while True:
-        watches = wm.add_watch(FIFODIR, inotifyMask)
-        if watches[FIFODIR] < 0:
+        watches = wm.add_watch(watchDir, inotifyMask, rec=True, auto_add=True)
+        if watches[watchDir] < 0:
+            log.debug("%s not found." % watchDir)
             time.sleep(1)
         else:
+            log.debug("Added watch on: %s" % watchDir)
             break
 
 def startInotify(poller):
@@ -94,7 +106,7 @@ def startInotify(poller):
     automatically terminate when the program exits.
     """
     wm = pyinotify.WatchManager()
-    handler = InotifyEventHandler(poller=poller, watchManager=wm)
+    handler = InotifyEventHandler(poller=poller)
     notifier = pyinotify.ThreadedNotifier(wm, handler)
     notifier.setDaemon(True)
     notifier.start()
@@ -115,39 +127,46 @@ def pollFifos(p):
     registered by inotify.
     """
     # Register the already existing FIFOs
+    log.debug("Scanning for existing FIFOs")
+    c=0
     for f in os.listdir(FIFODIR):
         fullpath = os.path.join(FIFODIR, f)
         if isFifo(fullpath):
             addFifo(p, fullpath)
+            c += 1
+    log.debug("Found %d FIFOs." % c)
     while True:
+        # Newly registered FIFOs won't be read until after the next time
+        # poll() returns, so a timeout is needed.
         r = p.poll(5000)
         for fdstat in r:
-            log.debug("Processing: %s" % (fdstat,))
             if fdstat[1] & select.POLLIN:
-                log.debug("POLLIN: %d" % fdstat[1])
+                # There is data to be read!!
+                log.debug("POLLIN: %d" % fdstat[0])
                 syslogInject(fdstat[0])
             if fdstat[1] & select.POLLHUP:
-                log.debug("POLLHUP: %d" % fdstat[1])
+                # The other side of the pipe has been closed.
+                log.debug("POLLHUP: %d" % fdstat[0])
                 fullpath = os.path.join(FIFODIR, filesByFd[fdstat[0]][1])
                 removeFifo(p, fdstat[0])
                 addFifo(p, fullpath)
             if fdstat[1] & select.POLLERR:
-                log.debug("POLLERR: %d" % fdstat[1])
-            if fdstat[1] & select.POLLNVAL:
-                log.debug("POLLNVAL: %d" % fdstat[1])
+                # An error has occurred.  What?  We don't know.
+                log.debug("POLLERR: %d" % fdstat[0])
 
 def addFifo(poller, fullpath):
-    """Add FIFO to the poller object and save the info."""
+    """Add a FIFO to the poller object and save the info."""
     fifo = os.fdopen(os.open(fullpath, os.O_NONBLOCK))
     fd = fifo.fileno()
     fn = os.path.basename(fullpath)
     filesByName[fn] = (fifo, fn)
     filesByFd[fd] = (fifo, fn)
-    log.debug("Adding FIFO: %s[%d]" % (fullpath, fd))
+    log.debug("Adding FIFO to poller: %s[%d]" % (fullpath, fd))
     poller.register(fd, select.POLLIN)
 
 def removeFifo(poller, fd):
     fn = filesByFd[fd][1]
+    log.debug("Removing FIFO from poller: %s[%d]" % (fn, fd))
     poller.unregister(fd)
     del(filesByName[fn])
     del(filesByFd[fd])
@@ -159,7 +178,7 @@ def parserSetup():
                  help="Print copious debugging info. "
                       "Only used when run from a terminal.")
     p.add_option("--fifodir", "-d", action="store", default=FIFODIR,
-                 help="Directory to scan for Apache's loggin FIFOs. "
+                 help="Directory to scan for Apache's logging FIFOs. "
                       "Defaults to: %s" % FIFODIR)
     return p
 
