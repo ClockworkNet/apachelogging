@@ -1,3 +1,4 @@
 apache2ctl /usr/sbin
 errorlog2syslog /usr/sbin
 log2mail /usr/local/sbin
+cw_errorlog2syslog /etc/event.d

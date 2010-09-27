@@ -1,3 +1,17 @@
+cw-apachelogging (1.12) hardy; urgency=low
+
+  * Rework errorlog2syslog to gracefully handle deletion/creation of the
+    top-level error_logs directory.
+  * General cleanup.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Mon, 26 Jul 2010 19:05:52 -0500
+
+cw-apachelogging (1.11) hardy; urgency=low
+
+  * Forgot to add event.d script to 'install'
+
+ -- Ben Beuchler <insyte@clockwork.net>  Tue, 20 Jul 2010 19:35:26 -0500
+
 cw-apachelogging (1.10) hardy; urgency=low
 
   * Add log2mail.
