@@ -8,5 +8,9 @@ author      "Ben Beuchler <insyte@clockwork.net>"
 
 start on startup
 
-exec /usr/sbin/errorlog2syslog
+script
+  ulimit -n 10240
+  exec /usr/sbin/errorlog2syslog
+end script  
+
 respawn
