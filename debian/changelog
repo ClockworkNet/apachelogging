@@ -1,10 +1,16 @@
+cw-apachelogging (1.13) hardy; urgency=low
+
+  * Update startup script to increase the maximum fd limit.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Mon, 27 Sep 2010 18:03:57 -0500
+
 cw-apachelogging (1.12) hardy; urgency=low
 
   * Rework errorlog2syslog to gracefully handle deletion/creation of the
     top-level error_logs directory.
   * General cleanup.
 
- -- Ben Beuchler <insyte@clockwork.net>  Mon, 26 Jul 2010 19:05:52 -0500
+ -- Ben Beuchler <insyte@clockwork.net>  Mon, 27 Sep 2010 18:01:37 -0500
 
 cw-apachelogging (1.11) hardy; urgency=low
 
