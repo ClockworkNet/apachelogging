@@ -29,7 +29,7 @@ createAccessLogPipe() {
 createErrorLogPipes() {
     rm -rf ${LOGPIPEDIR}/error_logs
     mkdir -m 0770  ${LOGPIPEDIR}/error_logs
-    chown www-data:www-data $LOGPIPEDIR
+    chown www-data:www-data $LOGPIPEDIR/error_logs
     chmod 0770 $LOGPIPEDIR
     for servername in $( 
         for config in $(awk '/^Include/ { print $2 }' $HTTPDCONF)
