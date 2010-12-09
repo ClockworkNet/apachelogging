@@ -48,6 +48,7 @@ case $ARGV in
 		if ! [[ -d $LOGPIPEDIR ]]
 		then
 			mkdir -m 0700 $LOGPIPEDIR
+			chown www-data:www-data $LOGPIPEDIR
 		fi
         createAccessLogPipe
         createErrorLogPipes
