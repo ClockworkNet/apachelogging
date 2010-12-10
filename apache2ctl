@@ -29,17 +29,15 @@ createAccessLogPipe() {
 createErrorLogPipes() {
     rm -rf ${LOGPIPEDIR}/error_logs
     mkdir -m 0770  ${LOGPIPEDIR}/error_logs
-    chown www-data:www-data $LOGPIPEDIR/error_logs
     chmod 0770 $LOGPIPEDIR
     for servername in $( 
         for config in $(awk '/^Include/ { print $2 }' $HTTPDCONF)
             do
-                awk '/^[^#]*ServerName/ { print $2 }' $config
+                awk 'BEGIN {FS="/"} /^[[:space:]]*ErrorLog/ {print $6 }' $config
             done | sort -u
     )
     do
         mkfifo -m 0640 ${LOGPIPEDIR}/error_logs/$servername
-        chown www-data:www-data ${LOGPIPEDIR}/error_logs/$servername
     done
 }
 
@@ -47,11 +45,11 @@ case $ARGV in
     start|restart|graceful)
 		if ! [[ -d $LOGPIPEDIR ]]
 		then
-			mkdir -m 0700 $LOGPIPEDIR
-			chown www-data:www-data $LOGPIPEDIR
+			mkdir -m 0770 $LOGPIPEDIR
 		fi
         createAccessLogPipe
         createErrorLogPipes
+  	    chown -R ${USER}:${GROUP} "${LOGPIPEDIR}"
         ;;
 esac
 
