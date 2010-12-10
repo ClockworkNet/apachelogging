@@ -9,48 +9,46 @@
 #
 # Then install this script as /usr/sbin/apache2ctl.
 
-A2C="/usr/sbin/apache2ctl.distrib"
+ARGV="${@}"
 
-ARGV="$@"
-
-HTTPDCONF="/www/etc/apache2/httpd.conf"
-LOGPIPEDIR="/var/spool/apache2/"
-USER="www-data"
-GROUP="www-data"
+a2c='/usr/sbin/apache2ctl.distrib'
+httpd_conf='/www/etc/apache2/httpd.conf'
+log_pipe_dir='/var/spool/apache2/'
+user='www-data'
+group='www-data'
 
 createAccessLogPipe() {
-    if ! [[ -p ${LOGPIPEDIR}/access_log ]]
+    if ! [[ -p ${log_pipe_dir}/access_log ]]
     then
-        mkfifo -m 0660 ${LOGPIPEDIR}/access_log
-        chown www-data:www-data ${LOGPIPEDIR}/access_log
+        mkfifo -m 0660 "${log_pipe_dir}/access_log"
     fi
 }
  
 createErrorLogPipes() {
-    rm -rf ${LOGPIPEDIR}/error_logs
-    mkdir -m 0770  ${LOGPIPEDIR}/error_logs
-    chmod 0770 $LOGPIPEDIR
-    for servername in $( 
-        for config in $(awk '/^Include/ { print $2 }' $HTTPDCONF)
-            do
-                awk 'BEGIN {FS="/"} /^[[:space:]]*ErrorLog/ {print $6 }' $config
-            done | sort -u
-    )
+    local _config _error_log
+    rm -rf "${log_pipe_dir}/error_logs"
+    mkdir -m 0770  "${log_pipe_dir}/error_logs"
+    for _error_log in $(
+        for _config in $(awk '/^Include/ { print $2 }' ${httpd_conf})
+        do
+            awk 'BEGIN {FS="/"} /^[[:space:]]*ErrorLog/ {print $6 }' ${_config}
+        done | sort -u
+        ) 
     do
-        mkfifo -m 0640 ${LOGPIPEDIR}/error_logs/$servername
+        mkfifo -m 0660 "${log_pipe_dir}/error_logs/${_error_log}"
     done
 }
 
-case $ARGV in
+case ${ARGV} in
     start|restart|graceful)
-		if ! [[ -d $LOGPIPEDIR ]]
+		if ! [[ -d ${log_pipe_dir} ]]
 		then
-			mkdir -m 0770 $LOGPIPEDIR
+			mkdir -m 0770 "${log_pipe_dir}"
 		fi
         createAccessLogPipe
         createErrorLogPipes
-  	    chown -R ${USER}:${GROUP} "${LOGPIPEDIR}"
+  	    chown -R ${user}:${group} "${log_pipe_dir}"
         ;;
 esac
 
-$A2C $ARGV
+${a2c} ${ARGV}
