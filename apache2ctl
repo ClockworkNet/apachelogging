@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+#   DASH compatible.
 # 
 # Wrap calls to apache2ctl.  If necessary, build the error_log pipes
 # needed by error2syslog.
@@ -18,7 +19,7 @@ user='www-data'
 group='www-data'
 
 createAccessLogPipe() {
-    if ! [[ -p ${log_pipe_dir}/access_log ]]
+    if ! [ -p ${log_pipe_dir}/access_log ]
     then
         mkfifo -m 0660 "${log_pipe_dir}/access_log"
     fi
@@ -41,7 +42,7 @@ createErrorLogPipes() {
 
 case ${ARGV} in
     start|restart|graceful)
-		if ! [[ -d ${log_pipe_dir} ]]
+		if ! [ -d ${log_pipe_dir} ]
 		then
 			mkdir -m 0770 "${log_pipe_dir}"
 		fi
