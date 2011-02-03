@@ -1,3 +1,15 @@
+cw-apachelogging (1.15) hardy; urgency=low
+
+  * Incorporate new version of apache2ctl.
+
+ -- Ben Beuchler <insyte@hardybuild.cw.cw>  Thu, 03 Feb 2011 14:47:30 -0600
+
+cw-apachelogging (1.14) hardy; urgency=low
+
+  * Lost update.
+
+ -- Ben Beuchler <insyte@clockwork.net>  Mon, 27 Sep 2010 18:03:57 -0500
+
 cw-apachelogging (1.13) hardy; urgency=low
 
   * Update startup script to increase the maximum fd limit.
