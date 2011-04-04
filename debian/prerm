@@ -18,15 +18,8 @@ set -e
 
 
 case "$1" in
-    remove|upgrade|deconfigure)
-		if [ -f /etc/event.d/cw_errorlog2syslog ]
-		then
-			stop cw_errorlog2syslog
-		fi
-    ;;
-
-    failed-upgrade)
-		if [ -f /etc/event.d/cw_errorlog2syslog ]
+    remove|upgrade|deconfigure|failed-upgrade)
+		if status cw_errorlog2syslog | grep -Fq start
 		then
 			stop cw_errorlog2syslog
 		fi

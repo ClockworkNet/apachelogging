@@ -2,6 +2,8 @@ cw-apachelogging (1.16) lucid; urgency=low
 
   * Requires upstart 0.6.5 (lucid)
   * /etc/event.d/cw_errorlog2syslog => /etc/init/cw_errorlog2syslog.conf
+  * pyinotify.EventsCodes syntax updated
+  * package dirs now include /var/spool/apache2/error_logs
 
  -- Tim Baldoni <tim@clockwork.net>  Mon, 04 Apr 2011 13:21:55 -0500
 

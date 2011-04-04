@@ -86,8 +86,8 @@ def watchFifoDir(wm):
     Attempt to create a watch on the requested directory.  If it fails, sleep
     for 1 second and retry.
     """
-    inotifyMask = pyinotify.EventsCodes.IN_DELETE | \
-                  pyinotify.EventsCodes.IN_CREATE
+    inotifyMask = pyinotify.EventsCodes.ALL_FLAGS["IN_DELETE"] | \
+                  pyinotify.EventsCodes.ALL_FLAGS["IN_CREATE"]
     watchDir = os.path.dirname(FIFODIR)
     while True:
         watches = wm.add_watch(watchDir, inotifyMask, rec=True, auto_add=True)
