@@ -15,7 +15,7 @@ ARGV="${@}"
 a2c='/usr/sbin/apache2ctl.distrib'
 httpd_conf='/www/etc/apache2/httpd.conf'
 log_pipe_dir='/var/spool/apache2/'
-user='www-data'
+user='root'
 group='www-data'
 
 createAccessLogPipe() {
