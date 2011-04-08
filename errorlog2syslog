@@ -187,7 +187,6 @@ def apacheLoggingSetup():
     if sys.stdout.isatty():
         apacheErr.addHandler(apacheDebugHdlr)
 
-
 def parserSetup():
     """Setup the OptionParser instance."""
     p = optparse.OptionParser(__doc__)
