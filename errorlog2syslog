@@ -32,22 +32,8 @@ screenhdlr = logging.StreamHandler()
 screenfmt  = logging.Formatter('%(levelname)s %(message)s')
 screenhdlr.setFormatter(screenfmt)
 
-apacheErr = logging.getLogger('apache_error_log')
-
-apacheErrHdlr = logging.handlers.SysLogHandler('/dev/log', 'local2')
-apacheErrFmt = logging.Formatter('%(message)s')
-apacheErrHdlr.setFormatter(apacheErrFmt)
-apacheErr.addHandler(apacheErrHdlr)
-
-apacheDebugHdlr = logging.StreamHandler()
-apacheDebugFmt = logging.Formatter('%(message)s')
-apacheDebugHdlr.setFormatter(apacheDebugFmt)
-
-apacheErr.setLevel(logging.DEBUG)
-
 if sys.stdout.isatty():
     log.addHandler(screenhdlr)
-    apacheErr.addHandler(apacheDebugHdlr)
 
 filesByName = {}
 filesByFd   = {}
@@ -113,8 +99,7 @@ def startInotify(poller):
     watchFifoDir(wm)
 
 def syslogInject(fd):
-    """Read the data available on fd and inject into syslog.
-    """
+    """Read the data available on fd and inject into syslog."""
     name = filesByFd[fd][1]
     log.debug("Reading from %s fd(%d)" % (name, fd))
     apacheErr.info("%s[666]: %s" % (filesByFd[fd][1], filesByFd[fd][0].read().strip()))
@@ -165,11 +150,43 @@ def addFifo(poller, fullpath):
     poller.register(fd, select.POLLIN)
 
 def removeFifo(poller, fd):
+    """Remove a FIFO from the poller object."""
     fn = filesByFd[fd][1]
     log.debug("Removing FIFO from poller: %s[%d]" % (fn, fd))
     poller.unregister(fd)
     del(filesByName[fn])
     del(filesByFd[fd])
+
+def apacheLoggingSetup():
+    """Setup Apache Logging via /dev/log"""
+    global apacheErr
+    apacheErr = logging.getLogger('apache_error_log')
+
+    while True:
+        try:
+            apacheErrHdlr = logging.handlers.SysLogHandler('/dev/log', 'local2')
+            break
+        except IOError as (errno, strerror):
+            log.debug("Unable to connect to /dev/log: [Errno {0}] {1}"
+                      .format(errno, strerror))
+            time.sleep(1)
+        except:
+            log.debug("Unable to connect to /dev/log: %s" % sys.exc_info()[0])
+            time.sleep(1)
+
+    apacheErrFmt = logging.Formatter('%(message)s')
+    apacheErrHdlr.setFormatter(apacheErrFmt)
+    apacheErr.addHandler(apacheErrHdlr)
+
+    apacheDebugHdlr = logging.StreamHandler()
+    apacheDebugFmt = logging.Formatter('%(message)s')
+    apacheDebugHdlr.setFormatter(apacheDebugFmt)
+
+    apacheErr.setLevel(logging.DEBUG)
+
+    if sys.stdout.isatty():
+        apacheErr.addHandler(apacheDebugHdlr)
+
 
 def parserSetup():
     """Setup the OptionParser instance."""
@@ -189,6 +206,7 @@ def main(argv):
     FIFODIR = opts.fifodir
     if opts.verbose:
         log.setLevel(logging.DEBUG)
+    apacheLoggingSetup()
     poller = select.poll()
     startInotify(poller)
     pollFifos(poller)
