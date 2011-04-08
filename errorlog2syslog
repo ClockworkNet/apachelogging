@@ -72,7 +72,7 @@ class InotifyEventHandler(pyinotify.ProcessEvent):
                 addFifo(self._poller, os.path.join(FIFODIR, event.name))
 
     def process_default(self, event):
-        log.debug("Unknown event: %s on %s[%d]" % (event.name,
+        log.debug("Unknown event: %s on %s[%d]" % (event.maskname,
                                                    event.path, event.wd))
 
 def isFifo(path):
