@@ -1,3 +1,12 @@
+cw-apachelogging (1.17) lucid; urgency=low
+
+  * errorlog2syslog
+      * 'event_name' to 'maskname' for compatiblity with pyinotify >= 0.8.x
+      * added handling of unavailable /dev/log (ex. if cw_errorlog2syslog starts
+        before syslog-ng)
+
+ -- Tim Baldoni <tim@clockwork.net>  Fri, 08 Apr 2011 11:46:15 -0500
+
 cw-apachelogging (1.16) lucid; urgency=low
 
   * Requires upstart 0.6.5 (lucid)
