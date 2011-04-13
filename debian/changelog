@@ -1,3 +1,9 @@
+cw-apachelogging (1.17~lucid1) lucid; urgency=low
+
+  * Add ~lucid1 to better differintiate from hardy version
+
+ -- Tim Baldoni <tim@clockwork.net>  Wed, 13 Apr 2011 13:55:25 -0500
+
 cw-apachelogging (1.17) lucid; urgency=low
 
   * errorlog2syslog
