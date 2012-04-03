@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# 
+#
 # Ben Beuchler
 # <insyte@clockwork.net>
 # 04/15/2010
@@ -19,7 +19,8 @@ import stat
 import time
 import select
 import optparse
-import logging, logging.handlers
+import logging
+import logging.handlers
 
 # Third-party modules
 import pyinotify
@@ -29,14 +30,15 @@ FIFODIR = "/var/spool/apache2/error_logs"
 log = logging.getLogger('errlog2syslog')
 
 screenhdlr = logging.StreamHandler()
-screenfmt  = logging.Formatter('%(levelname)s %(message)s')
+screenfmt = logging.Formatter('%(levelname)s %(message)s')
 screenhdlr.setFormatter(screenfmt)
 
 if sys.stdout.isatty():
     log.addHandler(screenhdlr)
 
 filesByName = {}
-filesByFd   = {}
+filesByFd = {}
+
 
 class InotifyEventHandler(pyinotify.ProcessEvent):
     def __init__(self, poller):
@@ -61,10 +63,12 @@ class InotifyEventHandler(pyinotify.ProcessEvent):
         log.debug("Unknown event: %s on %s[%d]" % (event.maskname,
                                                    event.path, event.wd))
 
+
 def isFifo(path):
     """Check to see if the supplied path is a FIFO."""
     mode = os.stat(path)[stat.ST_MODE]
     return stat.S_ISFIFO(mode)
+
 
 def watchFifoDir(wm):
     """Try adding the watched directory until it succeeds.
@@ -84,6 +88,7 @@ def watchFifoDir(wm):
             log.debug("Added watch on: %s" % watchDir)
             break
 
+
 def startInotify(poller):
     """Launch inotify thread.
 
@@ -98,11 +103,14 @@ def startInotify(poller):
     notifier.start()
     watchFifoDir(wm)
 
+
 def syslogInject(fd):
     """Read the data available on fd and inject into syslog."""
     name = filesByFd[fd][1]
     log.debug("Reading from %s fd(%d)" % (name, fd))
-    apacheErr.info("%s[666]: %s" % (filesByFd[fd][1], filesByFd[fd][0].read().strip()))
+    apacheErr.info("%s[666]: %s" % (filesByFd[fd][1],
+                                    filesByFd[fd][0].read().strip()))
+
 
 def pollFifos(p):
     """Monitor the FIFOs in FIFODIR and process any data written to them.
@@ -113,7 +121,7 @@ def pollFifos(p):
     """
     # Register the already existing FIFOs
     log.debug("Scanning for existing FIFOs")
-    c=0
+    c = 0
     for f in os.listdir(FIFODIR):
         fullpath = os.path.join(FIFODIR, f)
         if isFifo(fullpath):
@@ -139,6 +147,7 @@ def pollFifos(p):
                 # An error has occurred.  What?  We don't know.
                 log.debug("POLLERR: %d" % fdstat[0])
 
+
 def addFifo(poller, fullpath):
     """Add a FIFO to the poller object and save the info."""
     fifo = os.fdopen(os.open(fullpath, os.O_NONBLOCK))
@@ -149,6 +158,7 @@ def addFifo(poller, fullpath):
     log.debug("Adding FIFO to poller: %s[%d]" % (fullpath, fd))
     poller.register(fd, select.POLLIN)
 
+
 def removeFifo(poller, fd):
     """Remove a FIFO from the poller object."""
     fn = filesByFd[fd][1]
@@ -157,6 +167,7 @@ def removeFifo(poller, fd):
     del(filesByName[fn])
     del(filesByFd[fd])
 
+
 def apacheLoggingSetup():
     """Setup Apache Logging via /dev/log"""
     global apacheErr
@@ -164,7 +175,8 @@ def apacheLoggingSetup():
 
     while True:
         try:
-            apacheErrHdlr = logging.handlers.SysLogHandler('/dev/log', 'local2')
+            apacheErrHdlr = logging.handlers.SysLogHandler('/dev/log',
+                                                           'local2')
             break
         except IOError as (errno, strerror):
             log.debug("Unable to connect to /dev/log: [Errno {0}] {1}"
@@ -187,6 +199,7 @@ def apacheLoggingSetup():
     if sys.stdout.isatty():
         apacheErr.addHandler(apacheDebugHdlr)
 
+
 def parserSetup():
     """Setup the OptionParser instance."""
     p = optparse.OptionParser(__doc__)
@@ -197,6 +210,7 @@ def parserSetup():
                  help="Directory to scan for Apache's logging FIFOs. "
                       "Defaults to: %s" % FIFODIR)
     return p
+
 
 def main(argv):
     global FIFODIR
@@ -209,6 +223,7 @@ def main(argv):
     poller = select.poll()
     startInotify(poller)
     pollFifos(poller)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
