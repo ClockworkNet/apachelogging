@@ -1,12 +1,12 @@
 #!/bin/bash
-# 
+#
 # Fatal error notification script
 #
 # Run as a persistent process by syslog-ng.  Any log lines that match the
 # regex specified in syslog-ng.conf will be fed to this script.  The log
-# lines will be queued up in a temp file until $INTERVAL passes.  If any
-# log entries exist, they will be mailed to $RCPT.
-# 
+# lines will be queued up in a temp file until ${INTERVAL} passes.  If any
+# log entries exist, they will be mailed to ${RCPT}.
+#
 # To configure syslog-ng to use this script, first create a destination
 # stanza that looks something like this:
 #
@@ -29,35 +29,36 @@ NEXT=$((SECONDS + INTERVAL))
 QUEUEDIR=$(mktemp -d /tmp/fatal_php_errors.XXXXXX)
 
 # Clean up after ourselves, even if we exit unexpectedly.
-trap "rm -rf $QUEUEDIR; exit" INT TERM EXIT
+trap 'es=${?}; rm -rf ${QUEUEDIR}; exit ${es}' INT TERM EXIT
 
 queue_log_entry () {
-	SITENAME=${LOGLINE%%:*}
-	if [[ ! ( -z "$LOGLINE" || -z "$SITENAME" ) ]]
-	then
-		echo "$LOGLINE" >> ${QUEUEDIR}/${SITENAME}
-		echo $SEPARATOR >> ${QUEUEDIR}/${SITENAME}
-		unset LOGLINE
-		unset SITENAME
-	fi
+    SITENAME=${LOGLINE%%:*}
+    if [[ ! ( -z "${LOGLINE}" || -z "${SITENAME}" ) ]]
+    then
+        echo "${LOGLINE}" >> ${QUEUEDIR}/${SITENAME}
+        echo ${SEPARATOR} >> ${QUEUEDIR}/${SITENAME}
+        unset LOGLINE
+        unset SITENAME
+    fi
 }
 
 mail_logs () {
-	for logfile in ${QUEUEDIR}/*
-	do
-		if [[ -f $logfile && (( $(stat -c "%s" $logfile) > 0 )) ]]
-		then
-			{
-				echo "X-Mailer: maillogs"
-				echo "To: Errors <errors@clockwork.net>"
-				echo "From: PHP Fatal Error Logger <blech@null.clockwork.net>"
-				echo "Subject: $HOST: $(basename $logfile): PHP Fatal Error"
-				echo
-				cat $logfile
-			} | $SENDMAIL -f $SENDER $RCPT
-			rm $logfile
-		fi
-	done
+    for logfile in ${QUEUEDIR}/*
+    do
+        if [[ -f ${logfile} && (( $(stat -c "%s" ${logfile}) > 0 )) ]]
+        then
+            {
+                echo "X-Mailer: maillogs"
+                echo "Auto-Submitted: auto-generated"
+                echo "To: Errors <errors@clockwork.net>"
+                echo "From: PHP Fatal Error Logger <blech@null.clockwork.net>"
+                echo "Subject: ${HOST}: $(basename ${logfile}): PHP Fatal Error"
+                echo
+                cat ${logfile}
+            } | ${SENDMAIL} -f ${SENDER} ${RCPT}
+            rm -f ${logfile}
+        fi
+    done
 }
 
 ########################################################
@@ -65,27 +66,27 @@ mail_logs () {
 #
 while true
 do
-	START=$SECONDS
-	read -t $TIMEOUT LOGLINE
-	EXITCODE=$?
-	END=$SECONDS
-	ELAPSED=$((END - START))
+    START=${SECONDS}
+    read -t ${TIMEOUT} LOGLINE
+    EXITCODE=$?
+    END=${SECONDS}
+    ELAPSED=$((END - START))
 
-	# The "read" command exits with 1 whether it hit the timeout or it
-	# received EOF.  LOGLINE is null in either case.  So the only way to
-	# tell that syslog-ng has closed the other end of the pipe is to
-	# detect the case where read exited 1 before its timeout elapsed.
-	if (( EXITCODE != 0 )) && (( ELAPSED < TIMEOUT ))
-	then
-		exit
-	fi
+    # The "read" command exits with 1 whether it hit the timeout or it
+    # received EOF.  LOGLINE is null in either case.  So the only way to
+    # tell that syslog-ng has closed the other end of the pipe is to
+    # detect the case where read exited 1 before its timeout elapsed.
+    if (( EXITCODE != 0 )) && (( ELAPSED < TIMEOUT ))
+    then
+        exit
+    fi
 
-	queue_log_entry
+    queue_log_entry
 
-	if (( SECONDS >= NEXT ))
-	then
-		echo "Calling mail_logs()"
-		mail_logs
-		NEXT=$((SECONDS + INTERVAL))
-	fi
+    if (( SECONDS >= NEXT ))
+    then
+        echo "Calling mail_logs()"
+        mail_logs
+        NEXT=$((SECONDS + INTERVAL))
+    fi
 done
