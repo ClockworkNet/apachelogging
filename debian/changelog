@@ -1,3 +1,9 @@
+cw-apachelogging (1.18~lucid) hardy; urgency=low
+
+  * do not install log2mail--moved to another package
+
+ -- Tim Baldoni <tim@clockwork.net>  Thu, 26 Jul 2012 15:27:05 -0500
+
 cw-apachelogging (1.17~lucid1) lucid; urgency=low
 
   * Add ~lucid1 to better differintiate from hardy version
