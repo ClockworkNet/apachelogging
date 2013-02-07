@@ -235,3 +235,11 @@ without any problems or increased load from ``errorlog2syslog``.
 .. _described: http://peter.blogs.balabit.com/2010/02/how-to-collect-apache-logs-by-syslog-ng/
 .. _inotify: http://en.wikipedia.org/wiki/Inotify
 .. _upstart: http://upstart.ubuntu.com/
+
+License
+-------
+
+- LICENSE_ (`MIT License`_)
+
+.. _LICENSE: LICENSE
+.. _`MIT License`: http://www.opensource.org/licenses/MIT
