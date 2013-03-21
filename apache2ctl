@@ -6,7 +6,7 @@
 #
 # Replace the system apache2ctl by creating a diversion, like so:
 #
-# dpkg-divert --add --rename --divert /usr/sbin/apache2ctl.distrib
+# dpkg-divert --add --rename --divert /usr/sbin/apache2ctl.distrib \
 #       /usr/sbin/apache2ctl
 #
 #
