@@ -1,3 +1,13 @@
+cw-apachelogging (1.19~lucid) lucid; urgency=low
+
+  * apache2ctl
+      * refactored to recursively scan Apache2 configs
+      * updated to use gawk for IGNORECASE
+      * updated to use entire ErrorLog file-path instead of 6th element of path
+      * minor non-impacting changes (whitespace, comments, etc.)
+
+ -- Tim Zehta <tim@clockwork.net>  Thu, 21 Mar 2013 13:19:47 -0500
+
 cw-apachelogging (1.18~lucid) hardy; urgency=low
 
   * do not install log2mail--moved to another package
