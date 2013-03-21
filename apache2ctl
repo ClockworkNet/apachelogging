@@ -1,9 +1,9 @@
 #!/bin/sh
 #   DASH compatible.
-# 
-# Wrap calls to apache2ctl.  If necessary, build the error_log pipes
+#
+# Wrap calls to apache2ctl. If necessary, build the error_log pipes
 # needed by error2syslog.
-# 
+#
 # Replace the system apache2ctl by creating a diversion, like so:
 #
 # dpkg-divert --add --rename --divert /usr/sbin/apache2ctl.distrib /usr/sbin/apache2ctl
@@ -18,13 +18,15 @@ log_pipe_dir='/var/spool/apache2/'
 user='root'
 group='www-data'
 
+
 createAccessLogPipe() {
     if ! [ -p ${log_pipe_dir}/access_log ]
     then
         mkfifo -m 0660 "${log_pipe_dir}/access_log"
     fi
 }
- 
+
+
 createErrorLogPipes() {
     local _config _error_log
     rm -rf "${log_pipe_dir}/error_logs"
@@ -34,7 +36,7 @@ createErrorLogPipes() {
         do
             awk 'BEGIN {FS="/"} /^[[:space:]]*ErrorLog/ {print $6 }' ${_config}
         done | sort -u
-        ) 
+        )
     do
         mkfifo -m 0660 "${log_pipe_dir}/error_logs/${_error_log}"
     done
@@ -42,13 +44,13 @@ createErrorLogPipes() {
 
 case ${ARGV} in
     start|restart|graceful)
-		if ! [ -d ${log_pipe_dir} ]
-		then
-			mkdir -m 0770 "${log_pipe_dir}"
-		fi
+        if ! [ -d ${log_pipe_dir} ]
+        then
+            mkdir -m 0770 "${log_pipe_dir}"
+        fi
         createAccessLogPipe
         createErrorLogPipes
-  	    chown -R ${user}:${group} "${log_pipe_dir}"
+        chown -R ${user}:${group} "${log_pipe_dir}"
         ;;
 esac
 
