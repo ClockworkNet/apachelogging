@@ -19,6 +19,8 @@ httpd_conf='/www/etc/apache2/httpd.conf'
 log_pipe_dir='/var/spool/apache2'
 user='root'
 group='www-data'
+gawk_inc='BEGIN { IGNORECASE=1 }/^[[:space:]]*Include[[:space:]]/ {print $2}'
+gawk_log='BEGIN { IGNORECASE=1 }/^[[:space:]]*ErrorLog[[:space:]]/ {print $2}'
 
 
 createAccessLogPipe() {
@@ -29,22 +31,35 @@ createAccessLogPipe() {
 }
 
 
+findErrorLogs() {
+    # Process Apache2 configuration files and:
+    #   1) Echos ErrorLog file-paths
+    #   2) processes included configurations
+    local _conf _inc _log
+    _conf=${1}
+    for _log in $(gawk "${gawk_log}" ${_conf})
+    do
+        echo "${_log}"
+    done
+    for _inc in $(gawk "${gawk_inc}" ${_conf})
+    do
+        [ -e "${_inc}" ] || continue
+        process_conf "${_inc}"
+    done
+}
+
+
 createErrorLogPipes() {
     # Create ErrorLog Pipes
     #   1) remove error_log directory
     #   2) create error_log directory
     #   3) create a fifo for each ErrorLog
-    local _config _error_log
+    local _log
     rm -rf "${log_pipe_dir}/error_logs"
     mkdir -m 0770  "${log_pipe_dir}/error_logs"
-    for _error_log in $(
-        for _config in $(awk '/^Include/ { print $2 }' ${httpd_conf})
-        do
-            awk 'BEGIN {FS="/"} /^[[:space:]]*ErrorLog/ {print $6 }' ${_config}
-        done | sort -u
-        )
+    for _log in $(findErrorLogs ${httpd_conf} | sort -u)
     do
-        mkfifo -m 0660 "${log_pipe_dir}/error_logs/${_error_log}"
+        mkfifo -m 0660 "${_log}"
     done
 }
 
