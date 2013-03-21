@@ -6,7 +6,9 @@
 #
 # Replace the system apache2ctl by creating a diversion, like so:
 #
-# dpkg-divert --add --rename --divert /usr/sbin/apache2ctl.distrib /usr/sbin/apache2ctl
+# dpkg-divert --add --rename --divert /usr/sbin/apache2ctl.distrib
+#       /usr/sbin/apache2ctl
+#
 #
 # Then install this script as /usr/sbin/apache2ctl.
 
@@ -28,6 +30,10 @@ createAccessLogPipe() {
 
 
 createErrorLogPipes() {
+    # Create ErrorLog Pipes
+    #   1) remove error_log directory
+    #   2) create error_log directory
+    #   3) create a fifo for each ErrorLog
     local _config _error_log
     rm -rf "${log_pipe_dir}/error_logs"
     mkdir -m 0770  "${log_pipe_dir}/error_logs"
@@ -42,6 +48,7 @@ createErrorLogPipes() {
     done
 }
 
+# Build error_log pipes
 case ${ARGV} in
     start|restart|graceful)
         if ! [ -d ${log_pipe_dir} ]
@@ -54,4 +61,5 @@ case ${ARGV} in
         ;;
 esac
 
+# Invoke apache2ctl
 ${a2c} ${ARGV}
