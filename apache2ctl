@@ -44,7 +44,7 @@ findErrorLogs() {
     for _inc in $(gawk "${gawk_inc}" ${_conf})
     do
         [ -e "${_inc}" ] || continue
-        process_conf "${_inc}"
+        findErrorLogs "${_inc}"
     done
 }
 
