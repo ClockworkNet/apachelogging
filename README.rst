@@ -7,7 +7,8 @@ A Painful History
 Apache logging in a clustered environment is pain.  Apache's built-in
 access logging assumes a single log file per ``VirtualHost`` written to by
 a single server.  There is a syslog option for error logs, but it makes no
-attempt to break out the error logs per ``VirtualHost``. [#]_
+attempt to break out the error logs per ``VirtualHost``. (until 2.3.9, see
+notes_, below).
 
 Our requirements are simple:
 
@@ -236,6 +237,15 @@ without any problems or increased load from ``errorlog2syslog``.
 .. _inotify: http://en.wikipedia.org/wiki/Inotify
 .. _upstart: http://upstart.ubuntu.com/
 
+Notes
+-----
+
+As of Apache httpd 2.3.9, the `ErrorLog Directive`_ is available. This should
+resolve this issue and make this project unnecessary.
+
+.. _`ErrorLog Directive`:
+   http://httpd.apache.org/docs/current/mod/core.html#errorlog
+
 License
 -------
 
@@ -243,11 +253,3 @@ License
 
 .. _LICENSE: LICENSE
 .. _`MIT License`: http://www.opensource.org/licenses/MIT
-
-
-.. [#] As of Apache httpd 2.3.9, the `ErrorLog Directive`_ is available.
-   This should resolve this issue and make this project unnecessary.
-
-
-.. _`ErrorLog Directive`:
-   http://httpd.apache.org/docs/current/mod/core.html#errorlog
