@@ -2,13 +2,13 @@ cw-apachelogging (1.18~lucid) hardy; urgency=low
 
   * do not install log2mail--moved to another package
 
- -- Tim Baldoni <tim@clockwork.net>  Thu, 26 Jul 2012 15:27:05 -0500
+ -- Tim Zehta <tim@clockwork.net>  Thu, 26 Jul 2012 15:27:05 -0500
 
 cw-apachelogging (1.17~lucid1) lucid; urgency=low
 
   * Add ~lucid1 to better differintiate from hardy version
 
- -- Tim Baldoni <tim@clockwork.net>  Wed, 13 Apr 2011 13:55:25 -0500
+ -- Tim Zehta <tim@clockwork.net>  Wed, 13 Apr 2011 13:55:25 -0500
 
 cw-apachelogging (1.17) lucid; urgency=low
 
@@ -17,7 +17,7 @@ cw-apachelogging (1.17) lucid; urgency=low
       * added handling of unavailable /dev/log (ex. if cw_errorlog2syslog starts
         before syslog-ng)
 
- -- Tim Baldoni <tim@clockwork.net>  Fri, 08 Apr 2011 11:46:15 -0500
+ -- Tim Zehta <tim@clockwork.net>  Fri, 08 Apr 2011 11:46:15 -0500
 
 cw-apachelogging (1.16) lucid; urgency=low
 
@@ -26,7 +26,7 @@ cw-apachelogging (1.16) lucid; urgency=low
   * pyinotify.EventsCodes syntax updated
   * package dirs now include /var/spool/apache2/error_logs
 
- -- Tim Baldoni <tim@clockwork.net>  Mon, 04 Apr 2011 13:21:55 -0500
+ -- Tim Zehta <tim@clockwork.net>  Mon, 04 Apr 2011 13:21:55 -0500
 
 cw-apachelogging (1.15) hardy; urgency=low
 
