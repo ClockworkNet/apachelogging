@@ -7,7 +7,7 @@ A Painful History
 Apache logging in a clustered environment is pain.  Apache's built-in
 access logging assumes a single log file per ``VirtualHost`` written to by
 a single server.  There is a syslog option for error logs, but it makes no
-attempt to break out the error logs per ``VirtualHost``.
+attempt to break out the error logs per ``VirtualHost``. [5]_
 
 Our requirements are simple:
 
@@ -15,7 +15,7 @@ Our requirements are simple:
 2. Easy access to real-time logs for developers.
 3. Minimal infrastructure required.
 4. Scale to many hundreds of VirtualHosts.
-   
+
 Over the years I've explored a number of techniques for providing useful
 real-time logs in a single location from multiple web servers:
 
@@ -76,7 +76,7 @@ Features:
 
 * Works for both access and error logs, albeit slightly differently.
 * Uses syslog as transport.
-* Minimal system impact. 
+* Minimal system impact.
 
 Access Logs
 ~~~~~~~~~~~
@@ -152,7 +152,7 @@ We solved this problem by creating a unique FIFO for each VirtualHost.
 Monitoring these FIFOs is a custom daemon (errorlog2syslog, written in
 Python) that reads the error log messages and injects them into syslog.
 Since the daemon knows which FIFO it read the message from, it is able to
-populate the "program" field accordingly. 
+populate the "program" field accordingly.
 
 The syslog-ng config on the web host does not require customization, as
 the log messages are injected by the daemon.
@@ -243,3 +243,6 @@ License
 
 .. _LICENSE: LICENSE
 .. _`MIT License`: http://www.opensource.org/licenses/MIT
+
+.. [#] As of Apache httpd 2.3.9, the ``ErrorLogFormat`` directive is available.
+   This should resolve this issue and make this project unnecessary.
