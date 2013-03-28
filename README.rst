@@ -8,7 +8,7 @@ Apache logging in a clustered environment is pain.  Apache's built-in
 access logging assumes a single log file per ``VirtualHost`` written to by
 a single server.  There is a syslog option for error logs, but it makes no
 attempt to break out the error logs per ``VirtualHost``. (until 2.3.9, see
-notes_, below).
+Notes_, below).
 
 Our requirements are simple:
 
