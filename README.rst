@@ -240,11 +240,11 @@ without any problems or increased load from ``errorlog2syslog``.
 Notes
 -----
 
-As of Apache httpd 2.3.9, the `ErrorLog Directive`_ is available. This should
-resolve this issue and make this project unnecessary.
+As of Apache httpd 2.3.9, the `ErrorLogFormat Directive`_ is available. This
+should resolve this issue and make this project unnecessary.
 
-.. _`ErrorLog Directive`:
-   http://httpd.apache.org/docs/current/mod/core.html#errorlog
+.. _`ErrorLogFormat Directive`:
+   http://httpd.apache.org/docs/current/mod/core.html#errorlogformat
 
 License
 -------
